@@ -45,7 +45,6 @@ char rule[] = "23/3";
 
 Create from array:
 ```c
-//Spaceship configuration
 bool arr[] =
 {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
