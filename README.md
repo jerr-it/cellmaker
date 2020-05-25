@@ -4,7 +4,7 @@
 </div>
 <br>
 <p align="center">
-Library for simulation cellular automata, like Conways Game of Life
+Library for simulation of cellular automata, like Conways Game of Life
 </p>
 
 <p align="center">
@@ -45,7 +45,6 @@ char rule[] = "23/3";
 
 Create from array:
 ```c
-//Spaceship configuration
 bool arr[] =
 {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -81,7 +80,7 @@ for (int i = 0; i < 40; i++)
 }
 ```
 
-Print will print the automaton onto the console. However you can render it however you like by accessing the automatons buffer directly. It's a linear array of bools. The variable 'usingA' will be true if bufferA or bufferB is currently in use.
+Print will print the automaton onto the console. However you can render it however you like by accessing the automatons buffer directly. It's a linear array of bools. The variable 'usingA' will be true if bufferA is currently in use.
 
 Free memory:
 ```c
