@@ -7,6 +7,10 @@
  * @license MIT-License
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -88,3 +92,7 @@ double rand01();
  * @param automaton automaton to free
  */
 void freeAutomaton(CellularAutomaton* automaton);
+
+#ifdef __cplusplus
+}
+#endif
