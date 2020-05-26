@@ -80,7 +80,11 @@ for (int i = 0; i < 40; i++)
 }
 ```
 
-Print will print the automaton onto the console. However you can render it however you like by accessing the automatons buffer directly. It's a linear array of bools. The variable 'usingA' will be true if bufferA is currently in use.
+<b>Print will print the automaton onto the console. However you can render it however you like by accessing the automatons buffer directly. It's a linear array of bools. Retrieve it by using:;</b>
+
+```c
+bool* currentBuffer = getCurrentBuffer(autom);
+```
 
 Free memory:
 ```c

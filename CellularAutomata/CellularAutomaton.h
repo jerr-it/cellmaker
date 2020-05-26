@@ -57,6 +57,20 @@ CellularAutomaton* createAutomatonFromArray(bool* array, char* rule, int xDimens
 void tick(CellularAutomaton* automaton);
 
 /**
+ * Function for retrieving the currently used buffer of an automaton
+ * @param  automaton automaton
+ * @return           automatons currently used buffer
+ */
+bool* getCurrentBuffer(CellularAutomaton* automaton);
+
+/**
+ * Function returning the buffer thats not currently being used
+ * @param  automaton automaton
+ * @return           automatons unused buffer
+ */
+bool* getUnusedBuffer(CellularAutomaton* automaton);
+
+/**
  * Get the amount of living neighbors of the specified position.
  * Wraps around the edges
  * @param  automaton automaton

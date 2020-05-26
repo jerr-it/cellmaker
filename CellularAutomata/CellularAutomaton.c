@@ -113,75 +113,66 @@ void tick(CellularAutomaton* automaton)
             //Apply rules
             int nbCount = getNeighborCount(automaton, x, y);
 
-            if (automaton->usingA)
+            bool* currentBuffer = getCurrentBuffer(automaton);
+            bool* otherBuffer   = getUnusedBuffer(automaton);
+
+            if (currentBuffer[x + y * automaton->xDim])
             {
-                if (automaton->bufferA[x + y * automaton->xDim])
+                bool survives = false;
+                //Loop over survival rules
+                for (int i = 0; i < automaton->rulesSurvivalCount; i++)
                 {
-                    bool survives = false;
-                    //Loop over survival rules
-                    for (int i = 0; i < automaton->rulesSurvivalCount; i++)
+                    if (nbCount == automaton->rulesSurvival[i])
                     {
-                        if (nbCount == automaton->rulesSurvival[i])
-                        {
-                            survives = true;
-                            break;
-                        }
+                        survives = true;
+                        break;
                     }
-
-                    automaton->bufferB[x + y * automaton->xDim] = survives;
                 }
-                else
-                {
-                    bool birth = false;
-                    //Loop over birth rules
-                    for (int i = 0; i < automaton->rulesBirthCount; i++)
-                    {
-                        if (nbCount == automaton->rulesBirth[i])
-                        {
-                            birth = true;
-                            break;
-                        }
-                    }
 
-                    automaton->bufferB[x + y * automaton->xDim] = birth;
-                }
+                otherBuffer[x + y * automaton->xDim] = survives;
             }
             else
             {
-                if (automaton->bufferB[x + y * automaton->xDim])
+                bool birth = false;
+                //Loop over birth rules
+                for (int i = 0; i < automaton->rulesBirthCount; i++)
                 {
-                    bool survives = false;
-                    //Loop over survival rules
-                    for (int i = 0; i < automaton->rulesSurvivalCount; i++)
+                    if (nbCount == automaton->rulesBirth[i])
                     {
-                        if (nbCount == automaton->rulesSurvival[i])
-                        {
-                            survives = true;
-                            break;
-                        }
+                        birth = true;
+                        break;
                     }
-
-                    automaton->bufferA[x + y * automaton->xDim] = survives;
                 }
-                else
-                {
-                    bool birth = false;
-                    //Loop over birth rules
-                    for (int i = 0; i < automaton->rulesBirthCount; i++)
-                    {
-                        if (nbCount == automaton->rulesBirth[i])
-                        {
-                            birth = true;
-                            break;
-                        }
-                    }
 
-                    automaton->bufferA[x + y * automaton->xDim] = birth;
-                }
+                otherBuffer[x + y * automaton->xDim] = birth;
             }
         }
     }
     automaton->usingA = !automaton->usingA;
+}
+
+bool* getUnusedBuffer(CellularAutomaton* automaton)
+{
+    if (automaton->usingA)
+    {
+        return(automaton->bufferB);
+    }
+    else
+    {
+        return(automaton->bufferA);
+    }
+}
+
+bool* getCurrentBuffer(CellularAutomaton* automaton)
+{
+    if (automaton->usingA)
+    {
+        return(automaton->bufferA);
+    }
+    else
+    {
+        return(automaton->bufferB);
+    }
 }
 
 int getNeighborCount(CellularAutomaton* automaton, int x, int y)
@@ -219,19 +210,10 @@ int getNeighborCount(CellularAutomaton* automaton, int x, int y)
                 yp = 0;
             }
 
-            if (automaton->usingA)
+            bool* currentBuffer = getCurrentBuffer(automaton);
+            if (currentBuffer[xp + yp * automaton->xDim])
             {
-                if (automaton->bufferA[xp + yp * automaton->xDim])
-                {
-                    count++;
-                }
-            }
-            else
-            {
-                if (automaton->bufferB[xp + yp * automaton->xDim])
-                {
-                    count++;
-                }
+                count++;
             }
         }
     }
@@ -241,14 +223,9 @@ int getNeighborCount(CellularAutomaton* automaton, int x, int y)
 
 void setCell(CellularAutomaton* automaton, int x, int y, bool alive)
 {
-    if (automaton->usingA)
-    {
-        automaton->bufferA[x + y * automaton->xDim] = alive;
-    }
-    else
-    {
-        automaton->bufferB[x + y * automaton->xDim] = alive;
-    }
+    bool* currentBuffer = getCurrentBuffer(automaton);
+
+    currentBuffer[x + y * automaton->xDim] = alive;
 }
 
 void print(CellularAutomaton* automaton)
@@ -257,27 +234,14 @@ void print(CellularAutomaton* automaton)
     {
         for (int x = 0; x < automaton->xDim; x++)
         {
-            if (automaton->usingA)
+            bool* currentBuffer = getCurrentBuffer(automaton);
+            if (currentBuffer[x + y * automaton->xDim])
             {
-                if (automaton->bufferA[x + y * automaton->xDim])
-                {
-                    printf("⬛");
-                }
-                else
-                {
-                    printf("⬜");
-                }
+                printf("⬛");
             }
             else
             {
-                if (automaton->bufferB[x + y * automaton->xDim])
-                {
-                    printf("⬛");
-                }
-                else
-                {
-                    printf("⬜");
-                }
+                printf("⬜");
             }
         }
         printf("\n");
