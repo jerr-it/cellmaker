@@ -237,11 +237,11 @@ void print(CellularAutomaton* automaton)
             bool* currentBuffer = getCurrentBuffer(automaton);
             if (currentBuffer[x + y * automaton->xDim])
             {
-                printf("⬛");
+                printf("\u2B1B");
             }
             else
             {
-                printf("⬜");
+                printf("\u2B1C");
             }
         }
         printf("\n");
