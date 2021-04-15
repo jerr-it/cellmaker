@@ -16,39 +16,38 @@ extern "C" {
 #include <string.h>
 #include <stdio.h>
 
-typedef struct
-{
-    bool* bufferA;
-    bool* bufferB;
-    bool  usingA;
+typedef struct {
+    bool*         buffers[2];
+    unsigned char currentBufferIdx;
 
-    int   xDim;
-    int   yDim;
+    size_t        width;
+    size_t        height;
 
-    int*  rulesSurvival;
-    int   rulesSurvivalCount;
-    int*  rulesBirth;
-    int   rulesBirthCount;
+    unsigned int* surviveRules;
+    size_t        surviveRuleCount;
+
+    unsigned int* reviveRules;
+    size_t        reviveRuleCount;
 }CellularAutomaton;
 
 /**
  * Function creating a new cellular automaton
  * @param  rule       Automaton survival/birth rules, seperated by a single slash
- * @param  xDimension width
- * @param  yDimension height
+ * @param  width      width
+ * @param  height     height
  * @return            pointer to new automaton
  */
-CellularAutomaton* createAutomaton(char* rule, double fillPercent, int xDimension, int yDimension);
+CellularAutomaton newAutomaton(unsigned int survive[], size_t sSize, unsigned int revive[], size_t rSize, double fillPercent, int width, int height);
 
 /**
  * Create the field from a given array
  * @param  array      array to construct buffer from
  * @param  rule       automaton rule
- * @param  xDimension width
- * @param  yDimension height
+ * @param  width      width
+ * @param  height     height
  * @return            pointer to new automaton
  */
-CellularAutomaton* createAutomatonFromArray(bool* array, char* rule, int xDimension, int yDimension);
+CellularAutomaton newAutomatonFromArray(bool* array, unsigned int survive[], size_t sSize, unsigned int revive[], size_t rSize, int width, int height);
 
 /**
  * Run automaton for 1 iteration
@@ -61,14 +60,14 @@ void tick(CellularAutomaton* automaton);
  * @param  automaton automaton
  * @return           automatons currently used buffer
  */
-bool* getCurrentBuffer(CellularAutomaton* automaton);
+bool* currentBuffer(CellularAutomaton automaton);
 
 /**
- * Function returning the buffer thats not currently being used
+ * Function for retrieving the currently unused buffer of an automaton
  * @param  automaton automaton
- * @return           automatons unused buffer
+ * @return           automatons currently unused buffer
  */
-bool* getUnusedBuffer(CellularAutomaton* automaton);
+bool* unusedBuffer(CellularAutomaton automaton);
 
 /**
  * Get the amount of living neighbors of the specified position.
@@ -78,7 +77,7 @@ bool* getUnusedBuffer(CellularAutomaton* automaton);
  * @param  y         y position
  * @return           amount of alive neighbors
  */
-int getNeighborCount(CellularAutomaton* automaton, int x, int y);
+int neighbourCount(CellularAutomaton automaton, int x, int y);
 
 /**
  * Set a cells value
@@ -87,13 +86,13 @@ int getNeighborCount(CellularAutomaton* automaton, int x, int y);
  * @param y         y position
  * @param alive     alive or not
  */
-void setCell(CellularAutomaton* automaton, int x, int y, bool alive);
+void setCell(CellularAutomaton automaton, int x, int y, bool alive);
 
 /**
  * Print automaton to console
  * @param automaton automaton to print
  */
-void print(CellularAutomaton* automaton);
+void print(CellularAutomaton automaton);
 
 /**
  * Generate random number between 0 and 1
@@ -105,7 +104,7 @@ double rand01();
  * Free automaton
  * @param automaton automaton to free
  */
-void freeAutomaton(CellularAutomaton* automaton);
+void freeAutomaton(CellularAutomaton automaton);
 
 #ifdef __cplusplus
 }

@@ -1,246 +1,144 @@
 #include "CellularAutomaton.h"
 
-CellularAutomaton* createAutomaton(char* rule, double fillPercent, int xDimension, int yDimension)
-{
-    //Create field and initialize
-    CellularAutomaton* automaton = (CellularAutomaton*)calloc(1, sizeof(CellularAutomaton));
+CellularAutomaton newAutomaton(unsigned int survive[], size_t sSize, unsigned int revive[], size_t rSize, double fillPercent, int width, int height) {
+    bool* bufferA = calloc(width * height, sizeof(bool));
+    bool* bufferB = calloc(width * height, sizeof(bool));
 
-    automaton->bufferA = (bool*)calloc(xDimension * yDimension, sizeof(bool));
-    automaton->bufferB = (bool*)calloc(xDimension * yDimension, sizeof(bool));
-
-    automaton->usingA = true;
-
-    automaton->xDim = xDimension;
-    automaton->yDim = yDimension;
-
-    for (int y = 0; y < automaton->yDim; y++)
-    {
-        for (int x = 0; x < automaton->xDim; x++)
-        {
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
             double rng = rand01();
-            if (rng <= fillPercent)
-            {
-                automaton->bufferA[x + y * automaton->xDim] = true;
-            }
-            else
-            {
-                automaton->bufferA[x + y * automaton->xDim] = false;
+            if (rng <= fillPercent) {
+                bufferA[x + y * width] = true;
+            } else {
+                bufferA[x + y * width] = false;
             }
         }
     }
 
-    //Read rules
-    char delimiter[] = "/";
-
-    //Create survival rules
-    char* survivalRule = strtok(rule, delimiter);
-
-    automaton->rulesSurvivalCount = strlen(survivalRule);
-    automaton->rulesSurvival      = (int*)calloc(automaton->rulesSurvivalCount, sizeof(int));
-
-    for (int i = 0; i < automaton->rulesSurvivalCount; i++)
-    {
-        automaton->rulesSurvival[i] = survivalRule[i] - '0';
-    }
-
-    //Create birth rules
-    char* birthRule = strtok(NULL, delimiter);
-
-    automaton->rulesBirthCount = strlen(birthRule);
-    automaton->rulesBirth      = (int*)calloc(automaton->rulesBirthCount, sizeof(int));
-
-    for (int i = 0; i < automaton->rulesBirthCount; i++)
-    {
-        automaton->rulesBirth[i] = birthRule[i] - '0';
-    }
-
-    return(automaton);
+    return
+        (CellularAutomaton) {
+            { bufferA, bufferB },
+            0,
+            width,
+            height,
+            survive,
+            sSize,
+            revive,
+            rSize,
+        };
 }
 
-CellularAutomaton* createAutomatonFromArray(bool* array, char* rule, int xDimension, int yDimension)
-{
-    //Create field and initialize
-    CellularAutomaton* automaton = (CellularAutomaton*)calloc(1, sizeof(CellularAutomaton));
+CellularAutomaton newAutomatonFromArray(bool* array, unsigned int survive[], size_t sSize, unsigned int revive[], size_t rSize, int width, int height) {
+    bool* bufferA = calloc(width * height, sizeof(bool));
+    bool* bufferB = calloc(width * height, sizeof(bool));
 
-    automaton->bufferA = (bool*)calloc(xDimension * yDimension, sizeof(bool));
-    automaton->bufferB = (bool*)calloc(xDimension * yDimension, sizeof(bool));
-
-    automaton->usingA = true;
-
-    automaton->xDim = xDimension;
-    automaton->yDim = yDimension;
-
-    for (int i = 0; i < xDimension * yDimension; i++)
-    {
-        automaton->bufferA[i] = array[i];
+    for (int i = 0; i < width * width; i++) {
+        bufferA[i] = array[i];
     }
 
-    //Read rules
-    char delimiter[] = "/";
-
-    //Create survival rules
-    char* survivalRule = strtok(rule, delimiter);
-
-    automaton->rulesSurvivalCount = strlen(survivalRule);
-    automaton->rulesSurvival      = (int*)calloc(automaton->rulesSurvivalCount, sizeof(int));
-
-    for (int i = 0; i < automaton->rulesSurvivalCount; i++)
-    {
-        automaton->rulesSurvival[i] = survivalRule[i] - '0';
-    }
-
-    //Create birth rules
-    char* birthRule = strtok(NULL, delimiter);
-
-    automaton->rulesBirthCount = strlen(birthRule);
-    automaton->rulesBirth      = (int*)calloc(automaton->rulesBirthCount, sizeof(int));
-
-    for (int i = 0; i < automaton->rulesBirthCount; i++)
-    {
-        automaton->rulesBirth[i] = birthRule[i] - '0';
-    }
-
-    return(automaton);
+    return
+        (CellularAutomaton) {
+            { bufferA, bufferB },
+            0,
+            width,
+            height,
+            survive,
+            sSize,
+            revive,
+            rSize
+        };
 }
 
-void tick(CellularAutomaton* automaton)
-{
-    //Check every spot on current buffer
-    for (int y = 0; y < automaton->yDim; y++)
-    {
-        for (int x = 0; x < automaton->xDim; x++)
-        {
-            //Apply rules
-            int nbCount = getNeighborCount(automaton, x, y);
+void tick(CellularAutomaton* automaton) {
+    for (int y = 0; y < automaton->height; y++) {
+        for (int x = 0; x < automaton->width; x++) {
+            int nbCount = neighbourCount(*automaton, x, y);
 
-            bool* currentBuffer = getCurrentBuffer(automaton);
-            bool* otherBuffer   = getUnusedBuffer(automaton);
+            bool* usedBuffer  = currentBuffer(*automaton);
+            bool* otherBuffer = unusedBuffer(*automaton);
 
-            if (currentBuffer[x + y * automaton->xDim])
-            {
+            if (usedBuffer[x + y * (*automaton).width]) {
                 bool survives = false;
-                //Loop over survival rules
-                for (int i = 0; i < automaton->rulesSurvivalCount; i++)
-                {
-                    if (nbCount == automaton->rulesSurvival[i])
-                    {
+                for (int i = 0; i < (*automaton).surviveRuleCount; i++) {
+                    if (nbCount == (*automaton).surviveRules[i]) {
                         survives = true;
                         break;
                     }
                 }
 
-                otherBuffer[x + y * automaton->xDim] = survives;
-            }
-            else
-            {
+                otherBuffer[x + y * (*automaton).width] = survives;
+            } else {
                 bool birth = false;
-                //Loop over birth rules
-                for (int i = 0; i < automaton->rulesBirthCount; i++)
-                {
-                    if (nbCount == automaton->rulesBirth[i])
-                    {
+                for (int i = 0; i < (*automaton).reviveRuleCount; i++) {
+                    if (nbCount == (*automaton).reviveRules[i]) {
                         birth = true;
                         break;
                     }
                 }
 
-                otherBuffer[x + y * automaton->xDim] = birth;
+                otherBuffer[x + y * (*automaton).width] = birth;
             }
         }
     }
-    automaton->usingA = !automaton->usingA;
+    automaton->currentBufferIdx = !automaton->currentBufferIdx;
 }
 
-bool* getUnusedBuffer(CellularAutomaton* automaton)
-{
-    if (automaton->usingA)
-    {
-        return(automaton->bufferB);
-    }
-    else
-    {
-        return(automaton->bufferA);
-    }
+bool* currentBuffer(CellularAutomaton automaton) {
+    return automaton.buffers[automaton.currentBufferIdx];
 }
 
-bool* getCurrentBuffer(CellularAutomaton* automaton)
-{
-    if (automaton->usingA)
-    {
-        return(automaton->bufferA);
-    }
-    else
-    {
-        return(automaton->bufferB);
-    }
+bool* unusedBuffer(CellularAutomaton automaton) {
+    return automaton.buffers[!automaton.currentBufferIdx];
 }
 
-int getNeighborCount(CellularAutomaton* automaton, int x, int y)
-{
+int neighbourCount(CellularAutomaton automaton, int x, int y) {
     int count = 0;
 
-    for (int yoff = -1; yoff <= 1; yoff++)
-    {
-        for (int xoff = -1; xoff <= 1; xoff++)
-        {
-            if (xoff == 0 && yoff == 0)
-            {
+    for (int yoff = -1; yoff <= 1; yoff++) {
+        for (int xoff = -1; xoff <= 1; xoff++) {
+            if (xoff == 0 && yoff == 0) {
                 continue;
             }
 
             int xp = x + xoff;
             int yp = y + yoff;
 
-            //Wrap around
-            if (xp < 0)
-            {
-                xp = automaton->xDim - 1;
-            }
-            else if (xp >= automaton->xDim)
-            {
+            if (xp < 0) {
+                xp = automaton.width - 1;
+            } else if (xp >= automaton.width) {
                 xp = 0;
             }
 
-            if (yp < 0)
-            {
-                yp = automaton->yDim - 1;
-            }
-            else if (yp >= automaton->yDim)
-            {
+            if (yp < 0) {
+                yp = automaton.height - 1;
+            } else if (yp >= automaton.height) {
                 yp = 0;
             }
 
-            bool* currentBuffer = getCurrentBuffer(automaton);
-            if (currentBuffer[xp + yp * automaton->xDim])
-            {
+            bool* usedBuffer = currentBuffer(automaton);
+            if (usedBuffer[xp + yp * automaton.width]) {
                 count++;
             }
         }
     }
 
-    return(count);
+    return count;
 }
 
-void setCell(CellularAutomaton* automaton, int x, int y, bool alive)
-{
-    bool* currentBuffer = getCurrentBuffer(automaton);
+void setCell(CellularAutomaton automaton, int x, int y, bool alive) {
+    bool* usedBuffer = currentBuffer(automaton);
 
-    currentBuffer[x + y * automaton->xDim] = alive;
+    usedBuffer[x + y * automaton.width] = alive;
 }
 
-void print(CellularAutomaton* automaton)
-{
-    for (int y = 0; y < automaton->yDim; y++)
-    {
-        for (int x = 0; x < automaton->xDim; x++)
-        {
-            bool* currentBuffer = getCurrentBuffer(automaton);
-            if (currentBuffer[x + y * automaton->xDim])
-            {
+void print(CellularAutomaton automaton) {
+    bool* usedBuffer = currentBuffer(automaton);
+
+    for (int y = 0; y < automaton.height; y++) {
+        for (int x = 0; x < automaton.width; x++) {
+            if (usedBuffer[x + y * automaton.width]) {
                 printf("\u2B1B");
-            }
-            else
-            {
+            } else {
                 printf("\u2B1C");
             }
         }
@@ -248,16 +146,11 @@ void print(CellularAutomaton* automaton)
     }
 }
 
-double rand01()
-{
-    return((double)rand() / (double)RAND_MAX);
+double rand01() {
+    return (double)rand() / (double)RAND_MAX;
 }
 
-void freeAutomaton(CellularAutomaton* automaton)
-{
-    free(automaton->rulesBirth);
-    free(automaton->rulesSurvival);
-    free(automaton->bufferA);
-    free(automaton->bufferB);
-    free(automaton);
+void freeAutomaton(CellularAutomaton automaton) {
+    free(automaton.buffers[0]);
+    free(automaton.buffers[1]);
 }
