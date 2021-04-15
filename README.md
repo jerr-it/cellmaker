@@ -22,6 +22,11 @@ Compile:
 cmake .
 make celautom
 ./celautom
+
+or
+
+gcc -o automaton main.c CellularAutomata/CellularAutomaton.h CellularAutomata/CellularAutomaton.c
+./automaton
 ```
 
 Visit main.c for complete file example.
@@ -31,16 +36,16 @@ Include:
 #include "CellularAutomata/CellularAutomaton.h"
 ```
 
-Create ruleset:
+
+Define your rules:
 ```c
-//See wikipedia for more detailed information
-//https://de.wikipedia.org/wiki/Conways_Spiel_des_Lebens#Alternative_Regel-Bezeichnung
-//Digits before slash tell when a live cell survives this iteration:
-//E.g.: 23/3 means living cells survive if the have either 2 or 3 neighbors, otherwise they die
-//Digits after slash tell when a dead cell becomes alive again:
-//E.g.: 23/3 means a dead cell gets revived if it has exactly 3 neighbors
-//23/3 is the configuration for conways game of life
-char rule[] = "23/3";
+//At what neighbor count will a cell survive the current iteration?
+unsigned int survive[] = { 2, 3 };
+size_t       sSize     = sizeof(survive) / sizeof(unsigned int);
+
+//At what neighbor count will a cell get revived in the current iteration?
+unsigned int revive[] = { 3 };
+size_t       rSize    = sizeof(revive) / sizeof(unsigned int);
 ```
 
 Create from array:
@@ -58,16 +63,16 @@ bool arr[] =
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
-CellularAutomaton* autom = createAutomatonFromArray(arr, rule, 8, 8);
+ CellularAutomaton autom = newAutomatonFromArray(arr, survive, sSize, revive, rSize, 10, 10);
 ```
 
-<b>Keep in mind that this area wraps around the edges, meaning that e.g. cells at the right edge neighbor the cells on the left edge.</b>
+<b>Keep in mind that this wraps around the edges, meaning that e.g. cells at the right edge neighbor the cells on the left edge.</b>
 
 Initialize randomly:
 ```c
 srand(time(NULL));
 //0.4 means the area will be alive by 40%
-CellularAutomaton* autom = createAutomaton(rule, 0.4, 20, 20);
+CellularAutomaton autom = newAutomaton(survive, sSize, revive, rSize, 0.4, 20, 20);
 ```
 
 Run steps:
@@ -83,7 +88,7 @@ for (int i = 0; i < 40; i++)
 <b>Print will print the automaton onto the console. However you can render it however you like by accessing the automatons buffer directly. It's a linear array of bools. Retrieve it by using:;</b>
 
 ```c
-bool* currentBuffer = getCurrentBuffer(autom);
+bool* usedBuffer = currentBuffer(autom);
 ```
 
 Free memory:
