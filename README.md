@@ -19,9 +19,8 @@ Library for simulation of cellular automata, like Conways Game of Life
 
 Compile:
 ```
-cmake .
-make celautom
-./celautom
+make 
+./main
 
 or
 
