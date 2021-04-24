@@ -82,7 +82,7 @@ bool* unusedBuffer(CellularAutomaton automaton);
  * @param  y         y position
  * @return           amount of alive neighbors
  */
-int neighbourCount(CellularAutomaton automaton, int x, int y);
+unsigned int neighbourCount(CellularAutomaton automaton, int x, int y);
 
 /**
  * Set a cells value

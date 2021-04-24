@@ -81,14 +81,14 @@ void* tickCell(void* data) {
         int x = i % (*(tData->automaton)).width;
         int y = i / (*(tData->automaton)).width;
 
-        int nbCount = neighbourCount(*(tData->automaton), x, y);
+        unsigned int nbCount = neighbourCount(*(tData->automaton), x, y);
 
         bool* usedBuffer  = currentBuffer(*(tData->automaton));
         bool* otherBuffer = unusedBuffer(*(tData->automaton));
 
         if (usedBuffer[i]) {
             bool survives = false;
-            for (int j = 0; j < (*(tData->automaton)).surviveRuleCount; j++) {
+            for (size_t j = 0; j < (*(tData->automaton)).surviveRuleCount; j++) {
                 if (nbCount == (*(tData->automaton)).surviveRules[j]) {
                     survives = true;
                     break;
@@ -98,7 +98,7 @@ void* tickCell(void* data) {
             otherBuffer[i] = survives;
         } else {
             bool birth = false;
-            for (int j = 0; j < (*(tData->automaton)).reviveRuleCount; j++) {
+            for (size_t j = 0; j < (*(tData->automaton)).reviveRuleCount; j++) {
                 if (nbCount == (*(tData->automaton)).reviveRules[j]) {
                     birth = true;
                     break;
@@ -152,8 +152,8 @@ bool* unusedBuffer(CellularAutomaton automaton) {
     return automaton.buffers[!automaton.currentBufferIdx];
 }
 
-int neighbourCount(CellularAutomaton automaton, int x, int y) {
-    int count = 0;
+unsigned int neighbourCount(CellularAutomaton automaton, int x, int y) {
+    unsigned int count = 0;
 
     for (int yoff = -1; yoff <= 1; yoff++) {
         for (int xoff = -1; xoff <= 1; xoff++) {
@@ -166,13 +166,13 @@ int neighbourCount(CellularAutomaton automaton, int x, int y) {
 
             if (xp < 0) {
                 xp = automaton.width - 1;
-            } else if (xp >= automaton.width) {
+            } else if (xp >= (int)automaton.width) {
                 xp = 0;
             }
 
             if (yp < 0) {
                 yp = automaton.height - 1;
-            } else if (yp >= automaton.height) {
+            } else if (yp >= (int)automaton.height) {
                 yp = 0;
             }
 
@@ -195,8 +195,8 @@ void setCell(CellularAutomaton automaton, int x, int y, bool alive) {
 void print(CellularAutomaton automaton) {
     bool* usedBuffer = currentBuffer(automaton);
 
-    for (int y = 0; y < automaton.height; y++) {
-        for (int x = 0; x < automaton.width; x++) {
+    for (size_t y = 0; y < automaton.height; y++) {
+        for (size_t x = 0; x < automaton.width; x++) {
             if (usedBuffer[x + y * automaton.width]) {
                 printf("\u2B1B");
             } else {
