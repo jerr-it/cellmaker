@@ -1,5 +1,5 @@
 COMPILER = gcc
-FLAGS = -g -std=c11 -pedantic -Wall -Werror -Wextra -Wfloat-equal -Wshadow
+FLAGS = -g -std=c17 -pedantic -Wall -Werror -Wextra -Wfloat-equal -Wshadow
 
 
 main: main.so automaton.so -lpthread
