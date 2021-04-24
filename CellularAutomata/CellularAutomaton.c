@@ -1,6 +1,24 @@
 #include "CellularAutomaton.h"
 
+/**
+ * @brief Used for passing data to a thread
+ */
+typedef struct {
+    int                i0; //i0, i1 mark the section of the automatons buffer assigned to the current thread
+    int                i1;
+    CellularAutomaton* automaton;
+} ThreadData;
+
+long coreCount;
+
 CellularAutomaton newAutomaton(unsigned int survive[], size_t sSize, unsigned int revive[], size_t rSize, double fillPercent, int width, int height) {
+    //Fetch cpu core count
+    coreCount = sysconf(_SC_NPROCESSORS_CONF);
+    if (coreCount == -1) { //sysconf failed
+        perror("Couldn't determine cpu core count, defaulting to 1");
+        coreCount = 1;
+    }
+
     bool* bufferA = calloc(width * height, sizeof(bool));
     bool* bufferB = calloc(width * height, sizeof(bool));
 
@@ -29,6 +47,12 @@ CellularAutomaton newAutomaton(unsigned int survive[], size_t sSize, unsigned in
 }
 
 CellularAutomaton newAutomatonFromArray(bool* array, unsigned int survive[], size_t sSize, unsigned int revive[], size_t rSize, int width, int height) {
+    coreCount = sysconf(_SC_NPROCESSORS_CONF);
+    if (coreCount == -1) { //sysconf failed
+        perror("Couldn't determine cpu core count, defaulting to 1");
+        coreCount = 1;
+    }
+
     bool* bufferA = calloc(width * height, sizeof(bool));
     bool* bufferB = calloc(width * height, sizeof(bool));
 
@@ -49,37 +73,74 @@ CellularAutomaton newAutomatonFromArray(bool* array, unsigned int survive[], siz
         };
 }
 
-void tick(CellularAutomaton* automaton) {
-    for (int y = 0; y < automaton->height; y++) {
-        for (int x = 0; x < automaton->width; x++) {
-            int nbCount = neighbourCount(*automaton, x, y);
+//Helper, executed for each cell in a thread
+void* tickCell(void* data) {
+    ThreadData* tData = (ThreadData*)data;
 
-            bool* usedBuffer  = currentBuffer(*automaton);
-            bool* otherBuffer = unusedBuffer(*automaton);
+    for (int i = tData->i0; i < tData->i1; i++) {
+        int x = i % (*(tData->automaton)).width;
+        int y = i / (*(tData->automaton)).width;
 
-            if (usedBuffer[x + y * (*automaton).width]) {
-                bool survives = false;
-                for (int i = 0; i < (*automaton).surviveRuleCount; i++) {
-                    if (nbCount == (*automaton).surviveRules[i]) {
-                        survives = true;
-                        break;
-                    }
+        int nbCount = neighbourCount(*(tData->automaton), x, y);
+
+        bool* usedBuffer  = currentBuffer(*(tData->automaton));
+        bool* otherBuffer = unusedBuffer(*(tData->automaton));
+
+        if (usedBuffer[i]) {
+            bool survives = false;
+            for (int j = 0; j < (*(tData->automaton)).surviveRuleCount; j++) {
+                if (nbCount == (*(tData->automaton)).surviveRules[j]) {
+                    survives = true;
+                    break;
                 }
-
-                otherBuffer[x + y * (*automaton).width] = survives;
-            } else {
-                bool birth = false;
-                for (int i = 0; i < (*automaton).reviveRuleCount; i++) {
-                    if (nbCount == (*automaton).reviveRules[i]) {
-                        birth = true;
-                        break;
-                    }
-                }
-
-                otherBuffer[x + y * (*automaton).width] = birth;
             }
+
+            otherBuffer[i] = survives;
+        } else {
+            bool birth = false;
+            for (int j = 0; j < (*(tData->automaton)).reviveRuleCount; j++) {
+                if (nbCount == (*(tData->automaton)).reviveRules[j]) {
+                    birth = true;
+                    break;
+                }
+            }
+
+            otherBuffer[i] = birth;
         }
     }
+
+    free(tData);
+    return NULL;
+}
+
+void tick(CellularAutomaton* automaton) {
+    pthread_t threads[coreCount];
+
+    int pixelsPerCore   = (automaton->width * automaton->height) / coreCount;
+    int remainingPixels = (automaton->width * automaton->height) % (pixelsPerCore * coreCount);
+
+    for (int i = 0; i < coreCount; i++) {
+        ThreadData* data = malloc(sizeof(ThreadData));
+
+        int i0 = i * pixelsPerCore;
+        int i1 = i0 + pixelsPerCore;
+        if (i == coreCount - 1) {
+            i1 += remainingPixels;
+        }
+
+        *data = (ThreadData){ i0, i1, automaton };
+
+        if (pthread_create(&threads[i], NULL, tickCell, (void*)data) != 0) {
+            perror("Couldn't create thread:");
+        }
+    }
+
+    for (int i = 0; i < coreCount; i++) {
+        if (pthread_join(threads[i], NULL) != 0) {
+            perror("Couldn't join thread:");
+        }
+    }
+
     automaton->currentBufferIdx = !automaton->currentBufferIdx;
 }
 

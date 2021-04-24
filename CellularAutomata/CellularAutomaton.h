@@ -15,7 +15,12 @@ extern "C" {
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <pthread.h>
+#include <unistd.h>
 
+/**
+ * @brief Saves data related to the cellular automaton
+ */
 typedef struct {
     bool*         buffers[2];
     unsigned char currentBufferIdx;

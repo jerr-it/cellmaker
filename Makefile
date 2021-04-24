@@ -1,15 +1,15 @@
 COMPILER = gcc
-FLAGS = -g 
+FLAGS = -g -std=c11 -pedantic -Wall -Werror
 
 
-main: main.o automaton.o
-	${COMPILER} -o $@ $^
+main: main.so automaton.so -lpthread
+	${COMPILER} ${FLAGS} -o $@ $^
 
-automaton.o: CellularAutomata/CellularAutomaton.c CellularAutomata/CellularAutomaton.h
+automaton.so: CellularAutomata/CellularAutomaton.c CellularAutomata/CellularAutomaton.h
 	${COMPILER} ${FLAGS} -c -o $@ $<
 
-main.o: main.c CellularAutomata/CellularAutomaton.h
+main.so: main.c CellularAutomata/CellularAutomaton.h
 	${COMPILER} ${FLAGS} -c -o $@ $<
 
 clean: 
-	rm -f main automaton.o main.o
+	rm -f main automaton.so main.so
