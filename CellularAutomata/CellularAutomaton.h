@@ -22,17 +22,17 @@ extern "C" {
  * @brief Saves data related to the cellular automaton
  */
 typedef struct {
-    bool*         buffers[2];
-    unsigned char currentBufferIdx;
+	bool *		buffers[2];
+	unsigned char	currentBufferIdx;
 
-    size_t        width;
-    size_t        height;
+	size_t		width;
+	size_t		height;
 
-    unsigned int* surviveRules;
-    size_t        surviveRuleCount;
+	unsigned int *	surviveRules;
+	size_t		surviveRuleCount;
 
-    unsigned int* reviveRules;
-    size_t        reviveRuleCount;
+	unsigned int *	reviveRules;
+	size_t		reviveRuleCount;
 }CellularAutomaton;
 
 /**
@@ -52,27 +52,27 @@ CellularAutomaton newAutomaton(unsigned int survive[], size_t sSize, unsigned in
  * @param  height     height
  * @return            pointer to new automaton
  */
-CellularAutomaton newAutomatonFromArray(bool* array, unsigned int survive[], size_t sSize, unsigned int revive[], size_t rSize, int width, int height);
+CellularAutomaton newAutomatonFromArray(bool *array, unsigned int survive[], size_t sSize, unsigned int revive[], size_t rSize, int width, int height);
 
 /**
  * Run automaton for 1 iteration
  * @param automaton automaton to run
  */
-void tick(CellularAutomaton* automaton);
+void tick(CellularAutomaton *automaton);
 
 /**
  * Function for retrieving the currently used buffer of an automaton
  * @param  automaton automaton
  * @return           automatons currently used buffer
  */
-bool* currentBuffer(CellularAutomaton automaton);
+bool *currentBuffer(CellularAutomaton automaton);
 
 /**
  * Function for retrieving the currently unused buffer of an automaton
  * @param  automaton automaton
  * @return           automatons currently unused buffer
  */
-bool* unusedBuffer(CellularAutomaton automaton);
+bool *unusedBuffer(CellularAutomaton automaton);
 
 /**
  * Get the amount of living neighbors of the specified position.
