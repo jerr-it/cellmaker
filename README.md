@@ -1,4 +1,4 @@
-<h1 align="center">C-ellularAutomaton</h1>
+<h1 align="center">Cellmaker</h1>
 <p align="center">
     <img src="https://img.shields.io/badge/-Language-blue?style=for-the-badge&logo=c" />
 </div>
