@@ -4,8 +4,8 @@
  * @brief Used for passing data to a thread
  */
 typedef struct {
-	int			i0; //i0, i1 mark the section of the automatons buffer assigned to the current thread
-	int			i1;
+	int			start; // start, end mark the section of the automatons buffer assigned to the current thread
+	int			end;
 	CellularAutomaton *	automaton;
 } ThreadData;
 
@@ -13,15 +13,15 @@ long coreCount;
 
 CellularAutomaton newAutomaton(unsigned int survive[], size_t sSize, unsigned int revive[], size_t rSize, double fillPercent, int width, int height)
 {
-	//Fetch cpu core count
+	// Fetch cpu core count
 	coreCount = sysconf(_SC_NPROCESSORS_CONF);
-	if (coreCount == -1) { //sysconf failed
+	if (coreCount == -1) { // sysconf failed
 		perror("Couldn't determine cpu core count, defaulting to 1");
 		coreCount = 1;
 	}
 
-	bool *bufferA = calloc(width * height, sizeof(bool));
-	bool *bufferB = calloc(width * height, sizeof(bool));
+	bool *bufferA = malloc(width * height * sizeof(bool));
+	bool *bufferB = malloc(width * height * sizeof(bool));
 
 	for (int y = 0; y < height; y++) {
 		for (int x = 0; x < width; x++) {
@@ -49,7 +49,7 @@ CellularAutomaton newAutomaton(unsigned int survive[], size_t sSize, unsigned in
 CellularAutomaton newAutomatonFromArray(bool *array, unsigned int survive[], size_t sSize, unsigned int revive[], size_t rSize, int width, int height)
 {
 	coreCount = sysconf(_SC_NPROCESSORS_CONF);
-	if (coreCount == -1) { //sysconf failed
+	if (coreCount == -1) { // sysconf failed
 		perror("Couldn't determine cpu core count, defaulting to 1");
 		coreCount = 1;
 	}
@@ -73,12 +73,12 @@ CellularAutomaton newAutomatonFromArray(bool *array, unsigned int survive[], siz
 		};
 }
 
-//Helper, executed for each cell in a thread
+// Helper, executed for each cell in a thread
 void *tickCell(void *data)
 {
 	ThreadData *tData = (ThreadData *)data;
 
-	for (int i = tData->i0; i < tData->i1; i++) {
+	for (int i = tData->start; i < tData->end; i++) {
 		int x = i % (*(tData->automaton)).width;
 		int y = i / (*(tData->automaton)).width;
 
@@ -124,12 +124,12 @@ void tick(CellularAutomaton *automaton)
 	for (int i = 0; i < coreCount; i++) {
 		ThreadData *data = malloc(sizeof(ThreadData));
 
-		int i0 = i * pixelsPerCore;
-		int i1 = i0 + pixelsPerCore;
+		int start = i * pixelsPerCore;
+		int end = start + pixelsPerCore;
 		if (i == coreCount - 1)
-			i1 += remainingPixels;
+			end += remainingPixels;
 
-		*data = (ThreadData){ i0, i1, automaton };
+		*data = (ThreadData) { start, end, automaton };
 
 		if (pthread_create(&threads[i], NULL, tickCell, (void *)data) != 0)
 			perror("Couldn't create thread:");
